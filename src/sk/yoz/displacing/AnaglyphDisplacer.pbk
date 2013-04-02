@@ -1,0 +1,142 @@
+/*
+Copyright (c) 2010, Jozef Ch˙ùka
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. All advertising materials mentioning features or use of this software
+   must display the following acknowledgement:
+   This product includes software developed by the Jozef Ch˙ùka.
+4. Neither the name of the Jozef Ch˙ùka nor the
+   names of its contributors may be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY Jozef Ch˙ùka ''AS IS'' AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL Jozef Ch˙ùka BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
+<languageVersion : 1.0;>
+ 
+kernel AnaglyphDisplacer
+<
+	namespace : "sk.yoz";
+	vendor : "Yoz";
+	version : 1;
+	description : "Anaglyphs with Pixel Bender";
+>
+{
+	input image4 src;
+	input image4 map;
+	output pixel4 dst;
+	
+	parameter float srcWidth
+	<
+		minValue: float(1.0);
+		maxValue: float(4096.0);
+		defaultValue: float(100.0);
+		description: "The width of source image.";
+	>;
+	
+	parameter float srcHeight
+	<
+		minValue: float(1.0);
+		maxValue: float(4096.0);
+		defaultValue: float(100.0);
+		description: "The height of source image.";
+	>;
+	
+	parameter float dx
+	<
+		minValue: float(-1000.0);
+		maxValue: float(1000.0);
+		defaultValue: float(0.0);
+		description: "The amount of displacement on x axis.";
+	>;
+
+	parameter float dy
+	<
+		minValue: float(-1000.0);
+		maxValue: float(1000.0);
+		defaultValue: float(0.0);
+		description: "The amount of displacement on y axis.";
+	>;
+	
+	parameter float zBase
+	<
+		minValue: float(0.0);
+		maxValue: float(1);
+		defaultValue: float(0.5);
+		description: "The z center.";
+	>;
+	
+	parameter float3x3 matrixLeft
+	<
+		minValue: float3x3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		maxValue: float3x3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+		defaultValue: float3x3(0.0, 0.0, 0.0, 0.7, 0.0, 0.0, 0.3, 0.0, 0.0);
+		description: "The left glass matrix.";
+	>;
+	
+	parameter float3x3 matrixRight
+	<
+		minValue: float3x3(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		maxValue: float3x3(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+		defaultValue: float3x3(0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+		description: "The right glass matrix.";
+	>;
+	
+	void evaluatePixel()
+	{
+		float2 pos = outCoord();
+		float amount = zBase - sampleLinear(map, pos).x;
+		
+		float pxLeft = pos.x + dx * amount;
+		float pyLeft = pos.y + dy * amount;
+		float4 leftSrc = sampleLinear(src, float2(pxLeft, pyLeft));
+		float4 left;
+		left.r = leftSrc.r * matrixLeft[0][0]
+			+ leftSrc.g * matrixLeft[1][0]
+			+ leftSrc.b * matrixLeft[2][0];
+		left.g = leftSrc.r * matrixLeft[0][1]
+			+ leftSrc.g * matrixLeft[1][1]
+			+ leftSrc.b * matrixLeft[2][1];
+		left.b = leftSrc.r * matrixLeft[0][2]
+			+ leftSrc.g * matrixLeft[1][2]
+			+ leftSrc.b * matrixLeft[2][2];
+		
+		float pxRight = pos.x - dx * amount;
+		float pyRight = pos.y - dy * amount;
+		float4 rightSrc = sampleLinear(src, float2(pxRight, pyRight));
+		float4 right;
+		right.r = rightSrc.r * matrixRight[0][0]
+			+ rightSrc.g * matrixRight[1][0]
+			+ rightSrc.b * matrixRight[2][0];
+		right.g = rightSrc.r * matrixRight[0][1]
+			+ rightSrc.g * matrixRight[1][1]
+			+ rightSrc.b * matrixRight[2][1];
+		right.b = rightSrc.r * matrixRight[0][2]
+			+ rightSrc.g * matrixRight[1][2]
+			+ rightSrc.b * matrixRight[2][2];
+		
+		dst = left + right;
+		
+		if(pxLeft < 0.0 || pxLeft > srcWidth 
+			|| pyLeft < 0.0 || pyLeft > srcHeight
+			|| pxRight < 0.0 || pxRight > srcWidth 
+			|| pyRight < 0.0 || pyRight > srcHeight)
+			dst.a = 0.0;
+	}
+}
