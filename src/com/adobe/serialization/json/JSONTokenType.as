@@ -62,8 +62,6 @@ package com.adobe.serialization.json {
 		
 		public static const NUMBER:int = 11;
 		
-		public static const NAN:int = 12;
-		
 	}
 	
 }

@@ -70,13 +70,6 @@ package com.adobe.webapis.events
 			_data = d;
 		}
 		
-		public override function clone():Event
-		{
-			var out:ServiceEvent = new ServiceEvent(type, bubbles, cancelable);
-			out.data = data;
-			
-			return out;
-		}
 
 	}
 }

@@ -1903,9 +1903,9 @@ package com.adobe.net
 				// Take the scheme from this URI and tack it on.  This is
 				// intended to make working with chdir() a little more
 				// tolerant.
-				var f:String = this.scheme + ":" + ref;
+				var final:String = this.scheme + ":" + ref;
 				
-				return constructURI(f);
+				return constructURI(final);
 			}
 			else if (ref.charAt(0) == "?")
 			{
