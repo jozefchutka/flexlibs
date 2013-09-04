@@ -58,6 +58,9 @@ package sk.yoz.touch
             
             type = TouchEvent.TOUCH_END;
             dispatcher.addEventListener(type, onTouchEnd, false, 0, true);
+            
+            type = TouchEvent.TOUCH_ROLL_OUT;
+            dispatcher.addEventListener(type, onTouchRollOut, false, 0, true);
         }
         
         public function detach(dispatcher:IEventDispatcher):void
@@ -72,6 +75,9 @@ package sk.yoz.touch
             
             type = TouchEvent.TOUCH_END;
             dispatcher.removeEventListener(type, onTouchEnd, false);
+            
+            type = TouchEvent.TOUCH_ROLL_OUT;
+            dispatcher.removeEventListener(type, onTouchRollOut, false);
         }
         
         public function getPoint(event:TouchEvent):Point
@@ -136,7 +142,14 @@ package sk.yoz.touch
         
         protected function onTouchEnd(event:TouchEvent):void
         {
-            _countFingers--;
+            if(_countFingers)
+                _countFingers--;
+        }
+        
+        protected function onTouchRollOut(event:TouchEvent):void
+        {
+            if(_countFingers)
+                _countFingers--;
         }
     }
 }
