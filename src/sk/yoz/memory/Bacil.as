@@ -108,7 +108,7 @@ package sk.yoz.memory
             byteArray.position = offset;
         }
         
-        protected function shiftDatabaseOffset(index:uint, delta:uint):void
+        protected function shiftDatabaseOffset(index:uint, delta:int):void
         {
             for(var key:uint in databaseOffset)
                 if(key > index)
